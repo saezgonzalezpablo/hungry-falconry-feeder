@@ -4,8 +4,8 @@
 #define ADCRES 4095.0
 
 //PINOUT DEFINED
-#define COLDSENS 33
-#define HOTSENS 34
+#define COLDSENS A0
+#define HOTSENS A1
 #define PELTIER 30
 
 //range values for overheating
