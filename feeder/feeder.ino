@@ -1,3 +1,4 @@
+#include <math.h>
 //Maximun voltaje for ADC measuring
 #define MAXVOLT 3.3
 //ADC resolution
@@ -15,66 +16,86 @@
 #define MINCOLD 5.0
 #define MAXCOLD 10.0
 
-float coldsens;
-float hotsens;
-float coldtemp;
-float hottemp;
+// Aux resistor for thermistors
+float RHOT = 22000;   // for values near 60º
+float RCOLD = 200000; //for values near 10º
+
+//for values: https://www.thinksrs.com/downloads/programs/Therm%20Calc/NTCCalibrator/NTCcalculator.htm
+float A = 0.7504758677E-3;
+float B = 2.101040115E-4;
+float C = 1.210003217E-7;
+
 bool overheat = false;
 bool cooling = true;
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
 
+float thermistor(int RawADC, float RAux)
+{
+  long resistor;
+  float temp;
+
+  resistor = RAux * ((1024.0 / RawADC) - 1); // termistor resistor from analogic reading
+
+  temp = log(resistor);
+  temp = 1 / (A + (B * temp) + (C * temp * temp * temp));
+  temp = temp - 273.15; // Kelvin to centigrades
+
+  return temp;
 }
 
-void loop() {
+void setup()
+{
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+}
 
+void loop()
+{
 
-  //Reading temperature sensors, coldsens and hotsens are in volts
-  coldsens = analogRead(COLDSENS) / ADCRES * MAXVOLT;
-  hotsens = analogRead(HOTSENS) / ADCRES * MAXVOLT;
+  float coldtemp;
+  float hottemp;
 
-  // Theorical formula calculated in excel. coldtemp is for 0-15º linealization. hottemp is for 50-60º linealization
-  coldtemp = coldsens / 0.059 - 30;
-  hottemp = hotsens / 0, 045 + 8, 53;
-  hottemp = 15;
+  coldtemp = thermistor(analogRead(COLDSENS), RCOLD);
+  hottemp = thermistor(analogRead(HOTSENS), RHOT);
+
   //checking if peltier is overheating, if it is, wait to min overheating value
-  if (hottemp > MAXOVERHEAT) {
+  if (hottemp > MAXOVERHEAT)
+  {
     overheat = true;
   }
-  if (overheat && hottemp < MINOVERHEAT) {
+  if (overheat && hottemp < MINOVERHEAT)
+  {
     overheat = false;
   }
 
   //If peltier is overheating, disconnect
-  if (overheat) {
+  if (overheat)
+  {
     digitalWrite(PELTIER, LOW);
-  } else {
+  }
+  else
+  {
 
     // If cold temp is less than MINCOLD, disconnect peltier until cold temp is more than MAXCOLD
-    if (coldtemp < MINCOLD) {
+    if (coldtemp < MINCOLD)
+    {
       cooling = false;
     }
 
-    if (cooling == false) {
-      if (coldtemp > MAXCOLD) {
+    if (cooling == false)
+    {
+      if (coldtemp > MAXCOLD)
+      {
         cooling = true;
         digitalWrite(PELTIER, HIGH);
-      } else {
-        digitalWrite(PELTIER, LOW);
-
       }
-    } else {
-      digitalWrite (PELTIER, HIGH);
-
+      else
+      {
+        digitalWrite(PELTIER, LOW);
+      }
     }
-
-
+    else
+    {
+      digitalWrite(PELTIER, HIGH);
+    }
   }
-
-}
-
-
-
-
 }
