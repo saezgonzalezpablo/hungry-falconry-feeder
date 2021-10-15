@@ -31,12 +31,12 @@ void loop() {
 
 
   //Reading temperature sensors, coldsens and hotsens are in volts
-  // coldsens = analogRead(COLDSENS) / ADCRES * MAXVOLT;
-  // hotsens = analogRead(HOTSENS) / ADCRES * MAXVOLT;
+  coldsens = analogRead(COLDSENS) / ADCRES * MAXVOLT;
+  hotsens = analogRead(HOTSENS) / ADCRES * MAXVOLT;
 
   // Theorical formula calculated in excel. coldtemp is for 0-15º linealization. hottemp is for 50-60º linealization
-  //coldtemp = coldsens / 0.059 - 30;
-  //hottemp = hotsens / 0, 045 + 8, 53;
+  coldtemp = coldsens / 0.059 - 30;
+  hottemp = hotsens / 0, 045 + 8, 53;
   hottemp = 15;
   //checking if peltier is overheating, if it is, wait to min overheating value
   if (hottemp > MAXOVERHEAT) {
